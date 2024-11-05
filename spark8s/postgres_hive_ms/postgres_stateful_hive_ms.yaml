@@ -7,6 +7,8 @@ metadata:
     group: db
 data:
   POSTGRES_DB: hive_metastore
+  # Add PGDATA env variable to specify a subdirectory
+  PGDATA: /var/lib/postgresql/data/pgdata
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -47,9 +49,15 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+            - name: PGDATA
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: PGDATA
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
+              subPath: pgdata  # Add subPath to avoid conflicts with lost+found
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
