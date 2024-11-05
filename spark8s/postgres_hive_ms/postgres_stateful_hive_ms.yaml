@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: spark-apps
+  labels:
+    group: db
+data:
+  POSTGRES_DB: hive_metastore
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
