@@ -7,7 +7,7 @@ on:
 
 env:
   CLUSTER_NAME: osd-k8s-cluster
-  CLUSTER_ZONE: us-east1-b
+  CLUSTER_ZONE: us-east1
 
 jobs:
   deploy:
