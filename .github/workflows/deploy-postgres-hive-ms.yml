@@ -36,7 +36,7 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials osd-k8s-cluster --zone us-east1-b --project ${{ secrets.GCP_PROJECT_ID }}
+          gcloud container clusters get-credentials osd-k8s-cluster --zone us-east1 --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Create namespace spark-apps
         run: |
