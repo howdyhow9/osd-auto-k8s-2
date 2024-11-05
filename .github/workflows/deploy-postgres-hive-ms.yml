@@ -58,6 +58,7 @@ jobs:
             --namespace spark-operator \
             --create-namespace \
             --set sparkJobNamespace=spark-apps \   
+            --set image.tag= v1beta2-1.6.0-3.5.0
 
       - name: Apply Kubernetes manifests
         run: |
