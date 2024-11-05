@@ -8,6 +8,7 @@ on:
 env:
   CLUSTER_NAME: osd-k8s-cluster
   CLUSTER_ZONE: us-east1
+  USER_EMAIL: gvsbharish@gmail.com
 
 jobs:
   deploy:
@@ -50,11 +51,15 @@ jobs:
         with:
           version: 'v3.12.3'  # Specify a version if needed
 
+      - name: Create ClusterRoleBinding
+        run: |
+          kubectl apply -f spark8s/spark_svc_account.yaml -n spark-apps
+
       - name: Install Spark Operator
         run: |
           helm repo add spark-operator https://kubeflow.github.io/spark-operator
           helm repo update
-          helm install osd-release spark-operator/spark-operator --namespace spark-operator --create-namespace --set sparkJobNamespace=spark-apps --set image.tag= v1beta2-1.6.0-3.5.0
+          helm install osd-release spark-operator/spark-operator --namespace spark-operator --create-namespace --set sparkJobNamespace=spark-apps
           
 
       - name: Apply Kubernetes manifests
