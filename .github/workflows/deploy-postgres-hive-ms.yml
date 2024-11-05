@@ -1,0 +1,39 @@
+name: Deploy PostgreSQL to GKE
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on changes to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Google Cloud credentials
+        uses: google-github-actions/setup-gcloud@v0.9.1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials osd-k8s-cluster --zone us-east1-b --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Create namespace spark-apps
+        run: |
+          kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_pvc_hive_ms.yaml -n spark-apps
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_secret_hive_ms.yaml -n spark-apps
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_stateful_hive_ms.yaml -n spark-apps
+
+      - name: Verify PostgreSQL deployment
+        run: |
+          kubectl get pods -l app=postgres -n spark-apps
+          kubectl get pvc -n spark-apps
