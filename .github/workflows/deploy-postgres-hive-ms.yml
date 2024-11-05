@@ -5,6 +5,10 @@ on:
     branches:
       - main  # Trigger deployment on changes to the main branch
 
+env:
+  CLUSTER_NAME: osd-k8s-cluster
+  CLUSTER_ZONE: us-east1-b
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
