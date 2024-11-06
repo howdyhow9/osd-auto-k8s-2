@@ -40,7 +40,11 @@ jobs:
         run: |
           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
             --zone ${{ env.CLUSTER_ZONE }} \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+            --project ${{ secrets.GCP_PROJECT_ID }} 
+
+      - name: Create Gcloud service account
+        run: |
+          kubectl create secret generic gcp-service-account --from-file=key.json=gcs_svc/osd-k8s-d99331074ea5.json -n spark-apps         
 
       - name: Create namespace spark-apps
         run: |
@@ -57,10 +61,7 @@ jobs:
 
       - name: Install Spark Operator
         run: |
-          helm repo add spark-operator https://kubeflow.github.io/spark-operator
-          helm repo update
-          helm install osd-release spark-operator/spark-operator --namespace spark-operator --create-namespace --set sparkJobNamespace=spark-apps
-          
+          kubectl create namespace spark-operator && helm install osds-release spark8s/spark-operator-1.1.27/spark-operator -n spark-operator
 
       - name: Apply Kubernetes manifests
         run: |
