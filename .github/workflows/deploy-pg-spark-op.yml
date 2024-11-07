@@ -61,7 +61,13 @@ jobs:
 
       - name: Install Spark Operator
         run: |
-          kubectl create namespace spark-operator && helm install osds-release spark8s/spark-operator-1.1.27/spark-operator -n spark-operator
+          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
+          helm upgrade --install osds-release spark8s/spark-operator-1.1.27/spark-operator \
+            -n spark-operator \
+            --create-namespace \
+            --wait \
+            --timeout 5m
+      
 
       - name: Apply Kubernetes manifests
         run: |
