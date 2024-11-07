@@ -1,13 +1,3 @@
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: airflow-filestore-sc
-provisioner: filestore.csi.storage.gke.io
-parameters:
-  tier: standard
-  network: default
-  location: us-east1-b  # Replace with your desired zone
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -15,9 +5,7 @@ metadata:
   namespace: airflow
 spec:
   accessModes:
-    - ReadWriteMany
-  storageClassName: airflow-filestore-sc
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
----
+      storage: 1Gi
