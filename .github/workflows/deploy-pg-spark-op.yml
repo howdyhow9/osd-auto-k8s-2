@@ -42,10 +42,6 @@ jobs:
             --zone ${{ env.CLUSTER_ZONE }} \
             --project ${{ secrets.GCP_PROJECT_ID }} 
 
-      - name: Create Gcloud service account
-        run: |
-          kubectl create secret generic gcp-service-account --from-file=key.json=gcs_svc/osd-k8s-d99331074ea5.json -n spark-apps         
-
       - name: Create namespace spark-apps
         run: |
           kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
