@@ -60,7 +60,7 @@ spec:
       volumes:
         - name: postgres-storage-airflow
           persistentVolumeClaim:
-            claimName: postgres-pvc-airflow
+            claimName: airflow-pvc-postgres
 ---
 apiVersion: v1
 kind: Service
