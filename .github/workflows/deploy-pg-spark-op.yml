@@ -99,6 +99,8 @@ jobs:
 
       - name: Install Airflow
         run: |
+          helm repo add apache-airflow https://airflow.apache.org
+          helm repo update
           helm upgrade --install airflow apache-airflow/airflow \
             --namespace airflow \
             --values airflow_k8s/airflow-values.yaml \
