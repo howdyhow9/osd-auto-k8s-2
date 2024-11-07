@@ -46,6 +46,10 @@ jobs:
         run: |
           kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
 
+      - name: Create namespace airflow
+        run: |
+          kubectl create namespace airflow || echo "Namespace spark-apps already exists"    
+
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
@@ -65,7 +69,39 @@ jobs:
           kubectl apply -f spark8s/postgres_hive_ms/postgres_secret_hive_ms.yaml -n spark-apps
           kubectl apply -f spark8s/postgres_hive_ms/postgres_stateful_hive_ms.yaml -n spark-apps
 
-      - name: Verify PostgreSQL deployment
+      - name: Deploy Airflow PostgreSQL
         run: |
-          kubectl get pods -l app=postgres -n spark-apps
-          kubectl get pvc -n spark-apps
+          kubectl apply -f airflow_k8s/postgres_airflow/postgres_secret_airflow.yaml -n airflow
+          kubectl apply -f airflow_k8s/postgres_airflow/postgres_pvc_airflow.yaml -n airflow
+          kubectl apply -f airflow_k8s/postgres_airflow/postgres_stateful_airflow.yaml -n airflow
+
+      - name: Create Airflow secrets
+        run: |
+          kubectl create secret generic airflow-postgres \
+            --from-literal=connection=postgresql://airflow:airflowpass@postgres-airflow:5432/airflow_metastore \
+            -n airflow || echo "Secret airflow-postgres already exists"
+
+          
+          kubectl create secret generic osds-webserver-secret \
+            --from-literal="webserver-secret-key=$(python3 -c 'import secrets; print(secrets.token_hex(16))')" \
+            -n airflow || echo "Secret osds-webserver-secret already exists"
+        
+
+      - name: Deploy Airflow PVC
+        run: |
+          kubectl apply -f airflow_k8s/airflow-pvc.yaml -n airflow
+
+      - name: Install Airflow
+        run: |
+          helm upgrade --install airflow apache-airflow/airflow \
+            --namespace airflow \
+            --values airflow_k8s/airflow-values.yaml \
+            --debug \
+            --timeout 10m
+
+      - name: Create Airflow-Spark ClusterRoleBinding
+        run: |
+          kubectl create clusterrolebinding default-admin \
+            --clusterrole cluster-admin \
+            --serviceaccount=airflow:airflow-worker \
+            --namespace spark-apps || echo "ClusterRoleBinding already exists"

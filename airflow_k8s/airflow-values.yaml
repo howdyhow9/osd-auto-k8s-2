@@ -1,0 +1,60 @@
+Fernet Key: czRjVmNxT3hjTE9LY1NYbXhXdE1mMnpOWVhGWHFRZDQ=
+
+executor: "KubernetesExecutor"
+
+postgresql:
+  enabled: false
+
+data:
+  metadataSecretName: airflow-postgres
+
+pgbouncer:
+  enabled: true
+
+webserverSecretKeySecretName: osds-webserver-secret
+# where the random key is under `webserver-secret-key` in the k8s Secret
+
+images:
+  airflow:
+    repository: gvsbharish01/osds
+    tag: osds-airflowk8s
+    pullPolicy: Always
+
+dependencies:
+  # Other dependencies...
+  - name: apache-airflow-providers-cncf-kubernetes
+    version: 7.14.0
+
+# Dependencies
+providers:
+  packages:
+    - "apache-airflow-providers-cncf-kubernetes==7.14.0"
+    - "apache-airflow-providers-google>=10.0.0"  # Added Google Cloud provider
+
+dags:
+  gitSync:
+    repo: git@github.com:howdyhow9/osds-airflow.git
+    branch: main
+    depth: 1
+    enabled: true
+    subPath: dags
+    sshKeySecret: airflow-git-ssh-secret
+
+# Logs persistence configuration updated for GCP
+logs:
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: airflow-filestore-sc  # Updated to use Filestore
+    existingClaim: airflow-logs-pvc
+
+scheduler:
+  extraInitContainers:
+    - name: fix-volume-logs-permissions
+      image: busybox
+      command: [ "sh", "-c", "chown -R 50000:0 /opt/airflow/logs/" ]
+      securityContext:
+        runAsUser: 0
+      volumeMounts:
+        - mountPath: /opt/airflow/logs/
+          name: logs

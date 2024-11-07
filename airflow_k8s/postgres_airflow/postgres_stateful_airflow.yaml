@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config-airflow
+  labels:
+    app: postgres-airflow
+    group: db
+data:
+  POSTGRES_DB: airflow_metastore
+  PGDATA: /var/lib/postgresql/data/pgdata
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-airflow
+  namespace: airflow
+  labels:
+    app: postgres-airflow
+    group: db
+spec:
+  serviceName: "postgres-airflow"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-airflow
+  template:
+    metadata:
+      labels:
+        app: postgres-airflow
+        type: db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config-airflow
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-airflow
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-airflow
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config-airflow
+                  key: PGDATA
+          volumeMounts:
+            - name: postgres-storage-airflow
+              mountPath: /var/lib/postgresql/data
+              subPath: pgdata  # Add subPath to avoid conflicts with lost+found
+      volumes:
+        - name: postgres-storage-airflow
+          persistentVolumeClaim:
+            claimName: postgres-pvc-airflow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-airflow
+  namespace: airflow
+  labels:
+    group: db
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-airflow
+  ports:
+    - port: 5432
+      targetPort: 5432

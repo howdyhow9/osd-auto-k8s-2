@@ -1,27 +1,47 @@
-apiVersion: sparkoperator.k8s.io/v1beta2
+apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
-  name: spark-pi
+  name: osds-spark-app
   namespace: spark-apps
 spec:
-  type: Scala
+  type: Python
+  pythonVersion: "3"
   mode: cluster
-  image: spark:3.5.3
-  imagePullPolicy: IfNotPresent
-  mainClass: org.apache.spark.examples.SparkPi
-  mainApplicationFile: local:///opt/spark/examples/jars/spark-examples.jar
-  arguments:
-    - "5000"
-  sparkVersion: 3.5.3
+  image: "gvsbharish01/osdspark8s:v1.0.8"
+  imagePullPolicy: Always
+  mainApplicationFile: "gs://osd-scripts/hello_world.py"
+  sparkVersion: "3.5.0"
+  timeToLiveSeconds: 30
   driver:
-    labels:
-      version: 3.5.3
     cores: 1
-    memory: 512m
+    memory: "1g"
+    labels:
+      version: "3.5.0"
+    secrets:
+      - name: "gcp-service-account"
+        path: "/mnt/secrets"
+        secretType: GCPServiceAccount
+    envVars:
+      GCS_PROJECT_ID: osd-k8s
     serviceAccount: spark
   executor:
-    labels:
-      version: 3.5.3
-    instances: 1
     cores: 1
-    memory: 512m
+    memory: "1g"
+    instances: 1
+    labels:
+      version: "3.5.0"
+    secrets:
+      - name: "gcp-service-account"
+        path: "/mnt/secrets"
+        secretType: GCPServiceAccount
+    envVars:
+      GCS_PROJECT_ID: osd-k8s
+  sparkConf:
+    spark.hadoop.fs.gs.impl: "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    spark.hadoop.fs.AbstractFileSystem.gs.impl: "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS"
+    spark.hadoop.fs.gs.project.id: "osd-k8s"
+    spark.hadoop.fs.gs.system.bucket: "osd-scripts"
+    spark.hadoop.google.cloud.auth.service.account.enable: "true"
+    spark.hadoop.fs.gs.auth.service.account.json.keyfile: "/mnt/secrets/key.json"
+    spark.driver.extraClassPath: "/opt/spark/jars/*"
+    spark.executor.extraClassPath: "/opt/spark/jars/*"
