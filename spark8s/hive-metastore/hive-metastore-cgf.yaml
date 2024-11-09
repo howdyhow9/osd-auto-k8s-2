@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metastore-cfg
+  namespace: spark-apps  # Specify the namespace if not default
+data:
+  metastore-site.xml: |
+    <configuration>
+      <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres.spark-apps:5432/hive_metastore</value>  # PostgreSQL service name in the same namespace
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+      </property>
+      <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>GUYgsjsj@123</value>  # Reference environment variable for password
+      </property>
+      <property>
+        <name>metastore.warehouse.dir</name>
+        <value>gs://osd-data/</value>  # Update with your GCS bucket name
+      </property>
+      <property>
+        <name>metastore.thrift.port</name>
+        <value>9083</value>
+      </property>
+    </configuration>
+  core-site.xml: |
+    <configuration>
+      <property>
+        <name>fs.gs.project.id</name>
+        <value>your-gcp-project-id</value>  # Set your GCP project ID
+      </property>
+      <property>
+        <name>fs.gs.system.bucket</name>
+        <value>osd-data</value>  # GCS bucket name where warehouse is stored
+      </property>
+      <property>
+        <name>fs.gs.auth.service.account.json.keyfile</name>
+        <value>/mnt/secrets/key.json</value>  # Path to GCP service account key file
+      </property>
+      <property>
+        <name>fs.gs.impl</name>
+        <value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem</value>
+      </property>
+      <property>
+        <name>fs.AbstractFileSystem.gs.impl</name>
+        <value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS</value>
+      </property>
+    </configuration>

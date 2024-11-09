@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-metastore
+spec:
+  selector:
+    matchLabels:
+      app: hive-metastore
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      containers:
+        - name: hive-metastore
+          image: gvsbharish01/osdhivemeta:v1.0.2
+          ports:
+            - containerPort: 9083
+          volumeMounts:
+            - name: metastore-cfg-vol
+              mountPath: /opt/hive-metastore/conf/metastore-site.xml
+              subPath: metastore-site.xml
+            - name: metastore-cfg-vol
+              mountPath: /opt/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+            - name: gcp-service-account-volume  # Mount the secret as a volume
+              mountPath: /mnt/secrets  # Mount path for the key file
+              readOnly: true
+          command: ["/opt/hive-metastore/bin/start-metastore"]
+          args: ["-p", "9083"]
+          imagePullPolicy: Always
+      volumes:
+        - name: metastore-cfg-vol
+          configMap:
+            name: metastore-cfg
+        - name: gcp-service-account-volume  # Define volume to mount the secret
+          secret:
+            secretName: gcp-service-account  # Specify the secret name

@@ -1,0 +1,46 @@
+FROM openjdk:8-slim
+
+# Set the Hadoop version
+ARG HADOOP_VERSION=3.2.0
+
+# Install necessary tools (curl) and remove apt cache to keep the image slim.
+RUN apt-get update && apt-get install -y curl --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
+
+# Download and extract the Hadoop binary package.
+RUN curl https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz \
+ | tar xvz -C /opt/  \
+ && ln -s /opt/hadoop-$HADOOP_VERSION /opt/hadoop \
+ && rm -r /opt/hadoop/share/doc
+
+# Install the Google Cloud Storage Hadoop connector.
+COPY ./spark8s/source_files/spark_delta/spark_venv/spark_home/jars/gcs-connector-hadoop3-latest.jar /opt/hadoop/share/hadoop/common/lib/gcs-connector-hadoop3-latest.jar
+COPY ./spark8s/source_files/spark_delta/spark_venv/spark_home/jars/google-cloud-core-2.47.0.jar /opt/hadoop/share/hadoop/common/lib/google-cloud-core-2.47.0.jar
+COPY ./spark8s/source_files/spark_delta/spark_venv/spark_home/jars/google-cloud-core-http-2.47.0.jar /opt/hadoop/share/hadoop/common/lib/google-cloud-core-http-2.47.0.jar
+COPY ./spark8s/source_files/spark_delta/spark_venv/spark_home/jars/google-cloud-storage-2.44.1.jar /opt/hadoop/share/hadoop/common/lib/google-cloud-storage-2.44.1.jar
+
+# Set necessary environment variables.
+ENV HADOOP_HOME="/opt/hadoop"
+ENV PATH="/opt/hadoop/bin:${PATH}"
+ENV SPARK_HOME="/opt/spark"
+ENV PATH="/opt/spark/bin:${PATH}"
+
+# Download and install the standalone metastore binary.
+RUN curl https://archive.apache.org/dist/hive/hive-standalone-metastore-3.0.0/hive-standalone-metastore-3.0.0-bin.tar.gz \
+ | tar xvz -C /opt/ \
+ && ln -s /opt/apache-hive-metastore-3.0.0-bin /opt/hive-metastore
+
+# Add PostgreSQL JDBC driver to the classpath.
+ADD https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar /opt/hadoop/share/hadoop/common/lib/
+ADD https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar /opt/hive-metastore/lib
+
+# Copy the Hive execution jar for execution.
+COPY ./spark8s/hive-metastore/hive-exec-3.1.0.3.1.0.0-78.jar /opt/apache-hive-metastore-3.0.0-bin/lib/
+
+# Set up authentication for Google Cloud.
+# You can provide a path to your service account key here.
+# For GKE, it's often set using GOOGLE_APPLICATION_CREDENTIALS environment variable.
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+
+# Make sure the container will have access to GCP resources.
+# Typically, you'll pass the service account JSON key file via environment variables or mount it in Kubernetes/GKE.

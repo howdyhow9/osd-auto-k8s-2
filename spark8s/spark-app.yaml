@@ -9,7 +9,7 @@ spec:
   mode: cluster
   image: "gvsbharish01/osdspark8s:v1.0.8"
   imagePullPolicy: Always
-  mainApplicationFile: "gs://osd-scripts/hello_world.py"
+  mainApplicationFile: "gs://osd-scripts/basic_spark.py"
   sparkVersion: "3.5.0"
   timeToLiveSeconds: 30
   driver:

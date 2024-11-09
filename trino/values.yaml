@@ -1,0 +1,15 @@
+image:
+  repository: trinodb/trino
+  pullPolicy: IfNotPresent
+  tag: "457"
+
+additionalCatalogs:
+  osd_delta_lake_catalog: |-
+    connector.name=delta-lake
+    hive.metastore.uri=thrift://hive-metastore.spark-apps:9083 
+    delta.hive-catalog-name=osd_delta_lake_catalog
+    delta.enable-non-concurrent-writes=true
+
+service:
+  type: ClusterIP
+  port: 8082

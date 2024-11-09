@@ -50,6 +50,18 @@ jobs:
         run: |
           kubectl create namespace airflow || echo "Namespace spark-apps already exists"    
 
+      - name: Create namespace Spark Operator
+        run: |
+          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"  
+
+      - name: Create namespace trino
+        run: |
+          kubectl create namespace trino || echo "Namespace trino already exists"    
+
+      - name: Create namespace kafka
+        run: |
+          kubectl create namespace kafka || echo "Namespace kafka already exists"    
+
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
@@ -61,12 +73,11 @@ jobs:
 
       - name: Install Spark Operator
         run: |
-          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
           helm upgrade --install osds-release spark8s/spark-operator-1.1.27/spark-operator \
             -n spark-operator \
             --create-namespace \
             --wait \
-            --timeout 5m
+            --timeout 2m
       
 
       - name: Apply Kubernetes manifests
@@ -74,6 +85,22 @@ jobs:
           kubectl apply -f spark8s/postgres_hive_ms/postgres_pvc_hive_ms.yaml -n spark-apps
           kubectl apply -f spark8s/postgres_hive_ms/postgres_secret_hive_ms.yaml -n spark-apps
           kubectl apply -f spark8s/postgres_hive_ms/postgres_stateful_hive_ms.yaml -n spark-apps
+
+      - name: Apply Hive Metastore Configurations
+        run: |
+          kubectl apply -f spark8s/hive-metastore/hive-metastore-cgf.yaml -n spark-apps
+          kubectl apply -f spark8s/hive-metastore/hive-metastore.yaml -n spark-apps
+          kubectl apply -f spark8s/hive-metastore/hive-metastore-svc.yaml -n spark-apps
+          kubectl apply -f spark8s/hive-metastore/hive-schema.yaml -n spark-apps    
+
+      - name: Add Trino Helm repository
+        run: |
+          helm repo add trino https://trinodb.github.io/charts
+          helm repo update
+
+      - name: Install Trino
+        run: |
+          helm upgrade --install --values trino/values.yaml trino trino/trino -n trino    
 
       - name: Deploy Airflow PostgreSQL
         run: |
@@ -113,3 +140,14 @@ jobs:
             --clusterrole cluster-admin \
             --serviceaccount=airflow:airflow-worker \
             --namespace spark-apps || echo "ClusterRoleBinding already exists"
+          
+      - name: Install Strimzi Kafka Operator
+        run: |
+          helm repo add strimzi https://strimzi.io/charts/
+          helm repo update
+          helm install strimzi strimzi/strimzi-kafka-operator -n kafka
+          
+      - name: Deploy Kafka Persistent and Service
+        run: |
+          kubectl apply -f kafka/kafka-persistent-single.yaml -n kafka
+          kubectl apply -f kafka/kafka-svc.yaml -n kafka

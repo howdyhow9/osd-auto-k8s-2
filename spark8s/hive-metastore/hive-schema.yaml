@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hive-schema-init
+spec:
+  template:
+    metadata:
+      labels:
+        app: hive-schema-init
+    spec:
+      containers:
+        - name: hive-schema-init
+          image: gvsbharish01/osdapachehive:v1.0.1
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              /opt/hive/bin/schematool --verbose -initSchema -dbType postgres \
+              -driver org.postgresql.Driver -userName "hive" -passWord "GUYgsjsj@123" \
+              -url "jdbc:postgresql://postgres.spark-apps:5432/hive_metastore?user=hive&password=GUYgsjsj@123&createDatabaseIfNotExist=true"
+      restartPolicy: Never
