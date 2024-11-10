@@ -3,6 +3,7 @@ kind: Job
 metadata:
   name: hive-schema-init
 spec:
+  ttlSecondsAfterFinished: 30
   template:
     metadata:
       labels:
