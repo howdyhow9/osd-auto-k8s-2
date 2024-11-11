@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-thrift-service
+spec:
+  clusterIP: None
+  selector:
+    app: spark-thrift-server
+  ports:
+    - name: thrift-server-port
+      protocol: TCP
+      port: 10000
+      targetPort: 10000
+    - protocol: TCP
+      name: spark-driver-port
+      port: 7078
+      targetPort: 7078
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-thrift-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-thrift-server
+  template:
+    metadata:
+      labels:
+        app: spark-thrift-server
+    spec:
+      serviceAccountName: spark
+      containers:
+        - name: thrift-server
+          image: gvsbharish01/osdspark8s:v1.0.8
+          command:
+            - bash
+            - -c
+            - >
+              /opt/spark/sbin/start-thriftserver.sh 
+              --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension 
+              --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog 
+              --conf spark.sql.warehouse.dir=gs://osd-data/
+              --conf hive.metastore.warehouse.dir=gs://osd-data/
+              --packages 'io.delta:delta-spark_2.12:3.1.0' \
+              && tail -f /opt/spark/logs/spark--org.apache.*
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/mnt/secrets/key.json"  # Path to GSA key file in the container
+            - name: GCS_PROJECT_ID
+              value: "osd-k8s"
+          volumeMounts:
+            - name: gcp-service-account-volume
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: gcp-service-account-volume
+          secret:
+            secretName: gcp-service-account  # Name of the Kubernetes Secret

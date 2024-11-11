@@ -13,8 +13,8 @@ spec:
   sparkVersion: "3.5.0"
   timeToLiveSeconds: 30
   driver:
-    cores: 2
-    memory: "1g"
+    cores: 1
+    memory: "512m"
     labels:
       version: "3.5.0"
     secrets:
@@ -25,8 +25,8 @@ spec:
       GCS_PROJECT_ID: osd-k8s
     serviceAccount: spark
   executor:
-    cores: 2
-    memory: "1g"
+    cores: 1
+    memory: "512m"
     instances: 1
     labels:
       version: "3.5.0"
