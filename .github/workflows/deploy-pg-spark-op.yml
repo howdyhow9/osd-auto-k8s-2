@@ -177,5 +177,5 @@ jobs:
 
       - name: Install Superset
         run: |
-          helm upgrade --install --values superset/superset_values.yaml \
+          helm upgrade --install --values superset/superset-values.yaml \
             superset superset/superset -n superset --wait || echo "Superset Helm release already exists"
