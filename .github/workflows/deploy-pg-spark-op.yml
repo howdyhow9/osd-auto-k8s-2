@@ -106,6 +106,10 @@ jobs:
           helm repo add trino https://trinodb.github.io/charts
           helm repo update
 
+      - name: Install Spark Thrift Server
+        run: |
+          kubectl apply -f spark8s/spark-thriftserver.yaml -n spark-apps           
+
       - name: Install Trino
         run: |
           helm upgrade --install --values trino/values.yaml trino trino/trino -n trino    
