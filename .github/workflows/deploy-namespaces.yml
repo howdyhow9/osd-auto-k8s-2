@@ -1,25 +1,18 @@
-name: Deploy Kubernetes Namespaces
+name: Deploy Namespaces
 
-runs-on: ubuntu-latest
+on:
+  workflow_call:  # Trigger when called by another workflow (like from `Deploy PostgreSQL to GKE`)
 
-steps:
-  - name: Create namespace spark-apps
-    run: kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
-
-  - name: Create namespace airflow
-    run: kubectl create namespace airflow || echo "Namespace airflow already exists"
-
-  - name: Create namespace Spark Operator
-    run: kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
-
-  - name: Create namespace trino
-    run: kubectl create namespace trino || echo "Namespace trino already exists"
-
-  - name: Create namespace kafka
-    run: kubectl create namespace kafka || echo "Namespace kafka already exists"
-
-  - name: Create namespace dbt
-    run: kubectl create namespace dbt || echo "Namespace dbt already exists"
-
-  - name: Create namespace superset
-    run: kubectl create namespace superset || echo "Namespace superset already exists"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Kubernetes Namespaces
+        run: |
+          kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
+          kubectl create namespace airflow || echo "Namespace airflow already exists"
+          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
+          kubectl create namespace trino || echo "Namespace trino already exists"
+          kubectl create namespace kafka || echo "Namespace kafka already exists"
+          kubectl create namespace dbt || echo "Namespace dbt already exists"
+          kubectl create namespace superset || echo "Namespace superset already exists"
