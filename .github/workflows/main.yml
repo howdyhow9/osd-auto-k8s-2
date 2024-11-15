@@ -9,5 +9,10 @@ jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./setup/action.yml
+      # Step 1: Checkout the repository to ensure that local files are available
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Use your custom action
+      - name: Run setup action
+        uses: ./setup/action.yml
