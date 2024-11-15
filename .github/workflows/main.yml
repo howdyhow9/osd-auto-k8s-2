@@ -32,44 +32,56 @@ on:
         default: "false"
 
 jobs:
-
   setup:
     name: Setup Environment
-    runs-on: ubuntu-latest
     if: ${{ github.event.inputs.deploy_setup == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/setup.yml  # Reference reusable setup workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger setup
+        uses: ./.github/workflows/setup.yml  # Refer to deploy_spark.yml directly, this will be triggered as a workflow
+
 
   deploy_spark:
     name: Deploy Spark
     needs: setup
     if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution
-    workflow_run:
-      workflow: ./.github/workflows/deploy_spark.yml  # Reference reusable Spark workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy_spark workflow
+        uses: ./.github/workflows/deploy_spark.yml  # Refer to deploy_spark.yml directly, this will be triggered as a workflow
 
   deploy_airflow:
     name: Deploy Airflow
     needs: setup
     if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution
-    workflow_run:
-      workflow: ./.github/workflows/deploy_airflow.yml  # Reference reusable Airflow workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy_airflow workflow
+        uses: ./.github/workflows/deploy_airflow.yml  # Refer to deploy_airflow.yml directly
 
   deploy_kafka:
     name: Deploy Kafka
     needs: setup
     if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution
-    workflow_run:
-      workflow: ./.github/workflows/deploy_kafka.yml  # Reference reusable Kafka workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy_kafka workflow
+        uses: ./.github/workflows/deploy_kafka.yml  # Refer to deploy_kafka.yml directly
 
   deploy_superset:
     name: Deploy Superset
     needs: setup
     if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
-    workflow_run:
-      workflow: ./.github/workflows/deploy_superset.yml  # Reference reusable Superset workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy_superset workflow
+        uses: ./.github/workflows/deploy_superset.yml  # Refer to deploy_superset.yml directly
 
   deploy_sts_trino:
-    name: Deploy Trino
+    name: Deploy ThriftServer and Trino
     needs: setup
     if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution
-    workflow_run:
-      workflow: ./.github/workflows/deploy_sts_trino.yml  # Reference reusable Trino workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy_sts_trino workflow
+        uses: ./.github/workflows/deploy_sts_trino.yml  # Refer to deploy_sts_trino.yml directly
