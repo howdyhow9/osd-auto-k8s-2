@@ -1,54 +1,16 @@
-name: Main Deployment Workflow
+name: Deploy Milan to GKE
 
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - main
+
 
 jobs:
-  setup:
-    name: Setup Environment
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Trigger setup
-        uses: ./.github/workflows/setup.yml  # Refer to setup.yml workflow directly
 
-  deploy_spark:
-    name: Deploy Spark
-    needs: setup
-    runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy_spark workflow
-        uses: ./.github/workflows/deploy_spark.yml  # Refer to deploy_spark.yml directly
+      - name: Setup Google Cloud
+        uses: ./setup/action.yml
 
-  deploy_airflow:
-    name: Deploy Airflow
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deploy_airflow workflow
-        uses: ./.github/workflows/deploy_airflow.yml  # Refer to deploy_airflow.yml directly
-
-  deploy_kafka:
-    name: Deploy Kafka
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deploy_kafka workflow
-        uses: ./.github/workflows/deploy_kafka.yml  # Refer to deploy_kafka.yml directly
-
-  deploy_superset:
-    name: Deploy Superset
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deploy_superset workflow
-        uses: ./.github/workflows/deploy_superset.yml  # Refer to deploy_superset.yml directly
-
-  deploy_sts_trino:
-    name: Deploy ThriftServer and Trino
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deploy_sts_trino workflow
-        uses: ./.github/workflows/deploy_sts_trino.yml  # Refer to deploy_sts_trino.yml directly
