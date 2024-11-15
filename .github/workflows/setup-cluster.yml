@@ -3,6 +3,10 @@ name: Setup Cluster
 on:
   workflow_call:  # Trigger when called by another workflow (like from `Deploy PostgreSQL to GKE`)
 
+env:
+  CLUSTER_NAME: osd-k8s-cluster
+  CLUSTER_ZONE: us-east1
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -11,7 +15,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          
+
       - name: Check out repository
         uses: actions/checkout@v3
 
