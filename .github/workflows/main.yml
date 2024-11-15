@@ -26,6 +26,10 @@ on:
         description: "Deploy Superset"
         required: false
         default: "false"
+      deploy_sts_trino:
+        description: "Deploy ThriftServer and Trino"
+        required: false
+        default: "false"
 
 jobs:
   setup:
@@ -57,3 +61,9 @@ jobs:
     needs: setup
     if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
     uses: ./.github/workflows/deploy_superset.yml  # Reference reusable Superset workflow
+
+  deploy_sts_trino:
+    name: Deploy Trino
+    needs: setup
+    if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/deploy_sts_trino.yml  # Reference reusable Superset workflow
