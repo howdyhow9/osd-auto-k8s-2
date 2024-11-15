@@ -1,0 +1,25 @@
+name: Deploy Kubernetes Namespaces
+
+runs-on: ubuntu-latest
+
+steps:
+  - name: Create namespace spark-apps
+    run: kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
+
+  - name: Create namespace airflow
+    run: kubectl create namespace airflow || echo "Namespace airflow already exists"
+
+  - name: Create namespace Spark Operator
+    run: kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
+
+  - name: Create namespace trino
+    run: kubectl create namespace trino || echo "Namespace trino already exists"
+
+  - name: Create namespace kafka
+    run: kubectl create namespace kafka || echo "Namespace kafka already exists"
+
+  - name: Create namespace dbt
+    run: kubectl create namespace dbt || echo "Namespace dbt already exists"
+
+  - name: Create namespace superset
+    run: kubectl create namespace superset || echo "Namespace superset already exists"
