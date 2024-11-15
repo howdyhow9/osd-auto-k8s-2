@@ -15,4 +15,4 @@ jobs:
 
       # Step 2: Use your custom action
       - name: Run setup action
-        uses: ./setup/action.yml
+        uses: ./.github/actions/setup
