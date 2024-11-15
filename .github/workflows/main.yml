@@ -43,28 +43,33 @@ jobs:
     name: Deploy Spark
     needs: setup
     if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/deploy_spark.yml  # Reference reusable Spark workflow
+    workflow_run:
+      workflow: ./.github/workflows/deploy_spark.yml  # Reference reusable Spark workflow
 
   deploy_airflow:
     name: Deploy Airflow
     needs: setup
     if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/deploy_airflow.yml  # Reference reusable Airflow workflow
+    workflow_run:
+      workflow: ./.github/workflows/deploy_airflow.yml  # Reference reusable Airflow workflow
 
   deploy_kafka:
     name: Deploy Kafka
     needs: setup
     if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/deploy_kafka.yml  # Reference reusable Kafka workflow
+    workflow_run:
+      workflow: ./.github/workflows/deploy_kafka.yml  # Reference reusable Kafka workflow
 
   deploy_superset:
     name: Deploy Superset
     needs: setup
     if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/deploy_superset.yml  # Reference reusable Superset workflow
+    workflow_run:
+      workflow: ./.github/workflows/deploy_superset.yml  # Reference reusable Superset workflow
 
   deploy_sts_trino:
     name: Deploy Trino
     needs: setup
     if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution
-    uses: ./.github/workflows/deploy_sts_trino.yml  # Reference reusable Superset workflow
+    workflow_run:
+      workflow: ./.github/workflows/deploy_sts_trino.yml  # Reference reusable Trino workflow
