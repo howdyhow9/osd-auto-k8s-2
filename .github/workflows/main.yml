@@ -34,7 +34,6 @@ on:
 jobs:
   setup:
     name: Setup Environment
-    if: ${{ github.event.inputs.deploy_setup == 'true' }}  # Conditional execution
     runs-on: ubuntu-latest
     steps:
       - name: Trigger setup
@@ -44,7 +43,6 @@ jobs:
   deploy_spark:
     name: Deploy Spark
     needs: setup
-    if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_spark workflow
