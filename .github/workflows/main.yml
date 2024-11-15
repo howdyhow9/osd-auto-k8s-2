@@ -1,0 +1,59 @@
+name: Main Deployment Workflow
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      deploy_setup:
+        description: "Run Setup"
+        required: false
+        default: "false"
+      deploy_spark:
+        description: "Deploy Spark"
+        required: false
+        default: "false"
+      deploy_airflow:
+        description: "Deploy Airflow"
+        required: false
+        default: "false"
+      deploy_kafka:
+        description: "Deploy Kafka"
+        required: false
+        default: "false"
+      deploy_superset:
+        description: "Deploy Superset"
+        required: false
+        default: "false"
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.deploy_setup == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/setup.yml  # Reference reusable setup workflow
+
+  deploy_spark:
+    name: Deploy Spark
+    needs: setup
+    if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/deploy_spark.yml  # Reference reusable Spark workflow
+
+  deploy_airflow:
+    name: Deploy Airflow
+    needs: setup
+    if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/deploy_airflow.yml  # Reference reusable Airflow workflow
+
+  deploy_kafka:
+    name: Deploy Kafka
+    needs: setup
+    if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/deploy_kafka.yml  # Reference reusable Kafka workflow
+
+  deploy_superset:
+    name: Deploy Superset
+    needs: setup
+    if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
+    uses: ./.github/workflows/deploy_superset.yml  # Reference reusable Superset workflow

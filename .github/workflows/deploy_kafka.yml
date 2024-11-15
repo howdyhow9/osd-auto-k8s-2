@@ -1,0 +1,25 @@
+name: Deploy Kafka
+
+on:
+  workflow_call: {}
+
+jobs:
+  deploy_kafka:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install Strimzi Kafka Operator
+        run: |
+          helm repo add strimzi https://strimzi.io/charts/
+          helm repo update
+          helm upgrade --install strimzi strimzi/strimzi-kafka-operator \
+            --namespace kafka \
+            --wait || echo "Strimzi Helm release already exists"
+
+      - name: Deploy Kafka Persistent Storage and Service
+        run: |
+          kubectl apply -f kafka/kafka-persistent-single.yaml -n kafka
+          kubectl apply -f kafka/kafka-svc.yaml -n kafka

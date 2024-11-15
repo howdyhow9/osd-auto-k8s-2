@@ -1,0 +1,22 @@
+name: Deploy Spark
+
+on:
+  workflow_call: {}
+
+jobs:
+  deploy_spark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Spark Operator
+        run: |
+          helm upgrade --install osds-release spark8s/spark-operator-1.1.27/spark-operator \
+            -n spark-operator \
+            --create-namespace \
+            --wait \
+            --timeout 2m
+
+      - name: Apply Kubernetes manifests for Hive
+        run: |
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_pvc_hive_ms.yaml -n spark-apps
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_secret_hive_ms.yaml -n spark-apps
+          kubectl apply -f spark8s/postgres_hive_ms/postgres_stateful_hive_ms.yaml -n spark-apps

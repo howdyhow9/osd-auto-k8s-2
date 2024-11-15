@@ -38,13 +38,25 @@ spec:
             - bash
             - -c
             - >
-              /opt/spark/sbin/start-thriftserver.sh 
-              --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension 
-              --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog 
-              --conf spark.sql.warehouse.dir=gs://osd-data/
-              --conf hive.metastore.warehouse.dir=gs://osd-data/
-              --packages 'io.delta:delta-spark_2.12:3.1.0' \
-              && tail -f /opt/spark/logs/spark--org.apache.*
+              /opt/spark/sbin/start-thriftserver.sh \
+                  --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
+                  --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
+                  --conf spark.sql.warehouse.dir=gs://osd-data/ \
+                  --conf hive.metastore.warehouse.dir=gs://osd-data/ \
+                  --conf javax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/hive_metastore \
+                  --conf spark.sql.catalogImplementation=hive \
+                  --conf javax.jdo.option.ConnectionDriverName=org.postgresql.Driver \
+                  --conf javax.jdo.option.ConnectionUserName=hive \
+                  --conf javax.jdo.option.ConnectionPassword=GUYgsjsj@123 \
+                  --conf datanucleus.schema.autoCreateTables=true \
+                  --conf hive.metastore.schema.verification=false \
+                  --conf spark.hadoop.fs.gs.impl=com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem \
+                  --conf spark.hadoop.fs.AbstractFileSystem.gs.impl=com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS \
+                  --conf spark.hadoop.fs.gs.auth.service.account.json.keyfile=/mnt/secrets/key.json \
+                  --conf spark.hadoop.fs.gs.project.id=osd-k8s \
+                  --conf spark.hadoop.fs.gs.system.bucket=osd-data \
+                  --packages 'io.delta:delta-spark_2.12:3.1.0' \
+                  && tail -f /opt/spark/logs/spark--org.apache.*
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: "/mnt/secrets/key.json"  # Path to GSA key file in the container

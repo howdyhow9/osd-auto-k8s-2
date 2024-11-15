@@ -1,0 +1,40 @@
+name: Setup GKE and Helm
+
+on:
+  workflow_call: {}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }} 
+
+      - name: Create namespaces
+        run: |
+          kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
+          kubectl create namespace airflow || echo "Namespace airflow already exists"
+          kubectl create namespace kafka || echo "Namespace kafka already exists"
+          kubectl create namespace superset || echo "Namespace superset already exists"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.3'

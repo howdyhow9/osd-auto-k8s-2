@@ -7,14 +7,14 @@ spec:
   type: Python
   pythonVersion: "3"
   mode: cluster
-  image: "gvsbharish01/osdspark8s:v1.0.8"
+  image: "gvsbharish01/osdspark8s:v1.0.9"
   imagePullPolicy: Always
-  mainApplicationFile: "gs://osd-scripts/basic_spark.py"
+  mainApplicationFile: "gs://osd-scripts/ingest_json.py"
   sparkVersion: "3.5.0"
   timeToLiveSeconds: 30
   driver:
     cores: 1
-    memory: "512m"
+    memory: "4g"
     labels:
       version: "3.5.0"
     secrets:
@@ -26,8 +26,8 @@ spec:
     serviceAccount: spark
   executor:
     cores: 1
-    memory: "512m"
-    instances: 1
+    memory: "4g"
+    instances: 2
     labels:
       version: "3.5.0"
     secrets:
