@@ -11,21 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger setup
-        uses: ./.github/workflows/setup.yml  # Refer to deploy_spark.yml directly, this will be triggered as a workflow
+        uses: ./.github/workflows/setup.yml  # Refer to setup.yml workflow directly
 
   deploy_spark:
     name: Deploy Spark
     needs: setup
-    if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_spark workflow
-        uses: ./.github/workflows/deploy_spark.yml  # Refer to deploy_spark.yml directly, this will be triggered as a workflow
+        uses: ./.github/workflows/deploy_spark.yml  # Refer to deploy_spark.yml directly
 
   deploy_airflow:
     name: Deploy Airflow
     needs: setup
-    if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_airflow workflow
@@ -34,7 +32,6 @@ jobs:
   deploy_kafka:
     name: Deploy Kafka
     needs: setup
-    if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_kafka workflow
@@ -43,7 +40,6 @@ jobs:
   deploy_superset:
     name: Deploy Superset
     needs: setup
-    if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_superset workflow
@@ -52,7 +48,6 @@ jobs:
   deploy_sts_trino:
     name: Deploy ThriftServer and Trino
     needs: setup
-    if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_sts_trino workflow
