@@ -1,98 +1,49 @@
-name: Main Deployment Workflow
+name: Setup GKE and Helm
 
 on:
-  push:
-    branches:
-      - main  # Trigger on push to the main branch
-  workflow_dispatch:  # Allow manual triggering
-    inputs:
-      deploy_setup:
-        description: "Run Setup"
-        required: false
-        default: "false"
-      deploy_spark:
-        description: "Deploy Spark"
-        required: false
-        default: "false"
-      deploy_airflow:
-        description: "Deploy Airflow"
-        required: false
-        default: "false"
-      deploy_kafka:
-        description: "Deploy Kafka"
-        required: false
-        default: "false"
-      deploy_superset:
-        description: "Deploy Superset"
-        required: false
-        default: "false"
-      deploy_sts_trino:
-        description: "Deploy ThriftServer and Trino"
-        required: false
-        default: "false"
+  workflow_call: {}
 
 jobs:
   setup:
-    name: Setup Environment
-    if: ${{ github.event.inputs.deploy_setup == 'true' }}  # Conditional execution
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v3
-      - name: Trigger setup workflow
-        uses: ./.github/workflows/setup.yml  # Referencing the setup.yml workflow
 
-  deploy_spark:
-    name: Deploy Spark
-    needs: setup
-    if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Trigger deploy_spark workflow
-        uses: ./.github/workflows/deploy_spark.yml
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-  deploy_airflow:
-    name: Deploy Airflow
-    needs: setup
-    if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Trigger deploy_airflow workflow
-        uses: ./.github/workflows/deploy_airflow.yml
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-  deploy_kafka:
-    name: Deploy Kafka
-    needs: setup
-    if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Trigger deploy_kafka workflow
-        uses: ./.github/workflows/deploy_kafka.yml
+      - name: Install GKE Auth Plugin
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          sudo apt-get update
+          sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin          
 
-  deploy_superset:
-    name: Deploy Superset
-    needs: setup
-    if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Trigger deploy_superset workflow
-        uses: ./.github/workflows/deploy_superset.yml
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }} 
 
-  deploy_sts_trino:
-    name: Deploy ThriftServer and Trino
-    needs: setup
-    if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Trigger deploy_sts_trino workflow
-        uses: ./.github/workflows/deploy_sts_trino.yml
+      - name: Create namespaces
+        run: |
+          kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
+          kubectl create namespace airflow || echo "Namespace airflow already exists"
+          kubectl create namespace kafka || echo "Namespace kafka already exists"
+          kubectl create namespace superset || echo "Namespace superset already exists"
+          kubectl create namespace trino || echo "Namespace trino already exists"
+          kubectl create namespace dbt || echo "Namespace dbt already exists"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.3'
