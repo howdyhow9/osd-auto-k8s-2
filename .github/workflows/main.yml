@@ -4,32 +4,6 @@ on:
   push:
     branches:
       - main  # Trigger on push to the main branch
-  workflow_dispatch:  # Allow manual triggering
-    inputs:
-      deploy_setup:
-        description: "Run Setup"
-        required: false
-        default: "false"
-      deploy_spark:
-        description: "Deploy Spark"
-        required: false
-        default: "false"
-      deploy_airflow:
-        description: "Deploy Airflow"
-        required: false
-        default: "false"
-      deploy_kafka:
-        description: "Deploy Kafka"
-        required: false
-        default: "false"
-      deploy_superset:
-        description: "Deploy Superset"
-        required: false
-        default: "false"
-      deploy_sts_trino:
-        description: "Deploy ThriftServer and Trino"
-        required: false
-        default: "false"
 
 jobs:
   setup:
@@ -39,10 +13,10 @@ jobs:
       - name: Trigger setup
         uses: ./.github/workflows/setup.yml  # Refer to deploy_spark.yml directly, this will be triggered as a workflow
 
-
   deploy_spark:
     name: Deploy Spark
     needs: setup
+    if: ${{ github.event.inputs.deploy_spark == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_spark workflow
@@ -51,7 +25,7 @@ jobs:
   deploy_airflow:
     name: Deploy Airflow
     needs: setup
-    if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution
+    if: ${{ github.event.inputs.deploy_airflow == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_airflow workflow
@@ -60,7 +34,7 @@ jobs:
   deploy_kafka:
     name: Deploy Kafka
     needs: setup
-    if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution
+    if: ${{ github.event.inputs.deploy_kafka == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_kafka workflow
@@ -69,7 +43,7 @@ jobs:
   deploy_superset:
     name: Deploy Superset
     needs: setup
-    if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution
+    if: ${{ github.event.inputs.deploy_superset == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_superset workflow
@@ -78,7 +52,7 @@ jobs:
   deploy_sts_trino:
     name: Deploy ThriftServer and Trino
     needs: setup
-    if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution
+    if: ${{ github.event.inputs.deploy_sts_trino == 'true' }}  # Conditional execution (use the inputs if defined)
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy_sts_trino workflow
