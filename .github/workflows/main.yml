@@ -7,10 +7,9 @@ on:
 
 
 jobs:
-  deploy:
+  my-job:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup Google Cloud
-        uses: ./setup/action.yml
+      - uses: actions/checkout@v3
+      - uses: ./setup/action.yml
 
