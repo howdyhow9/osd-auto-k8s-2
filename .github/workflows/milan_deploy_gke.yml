@@ -1,4 +1,4 @@
-name: Deploy PostgreSQL to GKE
+name: Deploy Milan to GKE
 
 on:
   push:
@@ -10,8 +10,7 @@ env:
   CLUSTER_ZONE: us-east1
 
 jobs:
-  # Job for GKE Setup and Namespace Creation
-  setup_gke:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +31,7 @@ jobs:
       - name: Install GKE Auth Plugin
         run: |
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - 
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
           sudo apt-get update
           sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
 
@@ -40,31 +39,42 @@ jobs:
         run: |
           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
             --zone ${{ env.CLUSTER_ZONE }} \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+            --project ${{ secrets.GCP_PROJECT_ID }} 
 
-      - name: Create namespaces
+      - name: Create namespace spark-apps
         run: |
           kubectl create namespace spark-apps || echo "Namespace spark-apps already exists"
-          kubectl create namespace airflow || echo "Namespace airflow already exists"
-          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"
-          kubectl create namespace trino || echo "Namespace trino already exists"
-          kubectl create namespace kafka || echo "Namespace kafka already exists"
-          kubectl create namespace dbt || echo "Namespace dbt already exists"
-          kubectl create namespace superset || echo "Namespace superset already exists"
 
-  # Job for Helm Setup and Spark Operator Deployment
-  helm_and_spark_operator:
-    runs-on: ubuntu-latest
-    needs: setup_gke  # Dependent on setup_gke job
-
-    steps:
-      - name: Configure kubectl
+      - name: Create namespace airflow
         run: |
-          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
-            --zone ${{ env.CLUSTER_ZONE }} \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+          kubectl create namespace airflow || echo "Namespace spark-apps already exists"    
 
-      - name: Create ClusterRoleBinding for Spark
+      - name: Create namespace Spark Operator
+        run: |
+          kubectl create namespace spark-operator || echo "Namespace spark-operator already exists"  
+
+      - name: Create namespace trino
+        run: |
+          kubectl create namespace trino || echo "Namespace trino already exists"    
+
+      - name: Create namespace kafka
+        run: |
+          kubectl create namespace kafka || echo "Namespace kafka already exists"    
+
+      - name: Create namespace dbt
+        run: |
+          kubectl create namespace dbt || echo "Namespace dbt already exists" 
+
+      - name: Create namespace superset
+        run: |
+          kubectl create namespace superset || echo "Namespace superset already exists"            
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.3'  # Specify a version if needed
+
+      - name: Create ClusterRoleBinding
         run: |
           kubectl apply -f spark8s/spark_svc_account.yaml -n spark-apps
 
@@ -76,13 +86,8 @@ jobs:
             --wait \
             --timeout 2m
 
-  # Job for Deploying PostgreSQL and Hive Metastore
-  deploy_postgres_and_hive:
-    runs-on: ubuntu-latest
-    needs: helm_and_spark_operator  # Dependent on helm_and_spark_operator job
 
-    steps:
-      - name: Apply PostgreSQL and Hive Metastore Kubernetes manifests
+      - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f spark8s/postgres_hive_ms/postgres_pvc_hive_ms.yaml -n spark-apps
           kubectl apply -f spark8s/postgres_hive_ms/postgres_secret_hive_ms.yaml -n spark-apps
@@ -93,29 +98,21 @@ jobs:
           kubectl apply -f spark8s/hive-metastore/hive-metastore-cgf.yaml -n spark-apps
           kubectl apply -f spark8s/hive-metastore/hive-metastore.yaml -n spark-apps
           kubectl apply -f spark8s/hive-metastore/hive-metastore-svc.yaml -n spark-apps
-          kubectl apply -f spark8s/hive-metastore/hive-schema.yaml -n spark-apps
+          kubectl apply -f spark8s/hive-metastore/hive-schema.yaml -n spark-apps    
 
-  # Job for Trino Deployment
-  deploy_trino:
-    runs-on: ubuntu-latest
-    needs: deploy_postgres_and_hive  # Dependent on deploy_postgres_and_hive job
-
-    steps:
       - name: Add Trino Helm repository
         run: |
           helm repo add trino https://trinodb.github.io/charts
           helm repo update
 
+      - name: Install Spark Thrift Server
+        run: |
+          kubectl apply -f spark8s/spark-thriftserver.yaml -n spark-apps           
+
       - name: Install Trino
         run: |
-          helm upgrade --install --values trino/values.yaml trino trino/trino -n trino
+          helm upgrade --install --values trino/values.yaml trino trino/trino -n trino    
 
-  # Job for Deploying Airflow PostgreSQL and Airflow Setup
-  deploy_airflow:
-    runs-on: ubuntu-latest
-    needs: deploy_trino  # Dependent on deploy_trino job
-
-    steps:
       - name: Deploy Airflow PostgreSQL
         run: |
           kubectl apply -f airflow_k8s/postgres_airflow/postgres_secret_airflow.yaml -n airflow
@@ -127,9 +124,12 @@ jobs:
           kubectl create secret generic airflow-postgres \
             --from-literal=connection=postgresql://airflow:airflowpass@postgres-airflow:5432/airflow_metastore \
             -n airflow || echo "Secret airflow-postgres already exists"
+          
+          
           kubectl create secret generic osds-webserver-secret \
             --from-literal="webserver-secret-key=$(python3 -c 'import secrets; print(secrets.token_hex(16))')" \
             -n airflow || echo "Secret osds-webserver-secret already exists"
+
 
       - name: Deploy Airflow PVC
         run: |
@@ -152,12 +152,6 @@ jobs:
             --serviceaccount=airflow:airflow-worker \
             --namespace spark-apps || echo "ClusterRoleBinding already exists"
 
-  # Job for Kafka Setup and DBT ServiceAccount Deployment
-  setup_kafka_and_dbt:
-    runs-on: ubuntu-latest
-    needs: deploy_airflow  # Dependent on deploy_airflow job
-
-    steps:
       - name: Install Strimzi Kafka Operator
         run: |
           helm repo add strimzi https://strimzi.io/charts/
@@ -179,12 +173,6 @@ jobs:
             --serviceaccount=dbt:dbt \
             --namespace=dbt || echo "ClusterRoleBinding dbt-role-binding already exists"
 
-  # Job for Superset Deployment
-  deploy_superset:
-    runs-on: ubuntu-latest
-    needs: setup_kafka_and_dbt  # Dependent on setup_kafka_and_dbt job
-
-    steps:
       - name: Add Superset Helm repository
         run: |
           helm repo add superset https://apache.github.io/superset
