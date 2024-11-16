@@ -58,8 +58,11 @@ jobs:
     needs: setup_gke  # Dependent on setup_gke job
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Create ClusterRoleBinding for Spark
         run: |
