@@ -185,4 +185,4 @@ jobs:
 
       - name: Delete Hive Schema Pod
         run: |
-          kubectl delete -f spark8s/hive-metastore/hive-schema.yaml -n spark-apps
+          kubectl delete -f spark8s/hive-metastore/hive-schema.yaml -n spark-apps || echo "Hive Schema pod already deleted"
