@@ -9,6 +9,15 @@ additionalCatalogs:
     hive.metastore.uri=thrift://hive-metastore.spark-apps:9083 
     delta.hive-catalog-name=osd_delta_lake_catalog
     delta.enable-non-concurrent-writes=true
+  osd_hudi_catalog: |-
+    connector.name=hudi
+    hive.metastore.uri=thrift://hive-metastore.spark-apps:9083
+  osd_iceberg_catalog: |-
+    connector.name=iceberg
+    hive.metastore.uri=thrift://hive-metastore.spark-apps:9083
+    iceberg.catalog.type=hive_metastore
+    iceberg.file-format=PARQUET
+    iceberg.compression-codec=SNAPPY
 
 service:
   type: ClusterIP

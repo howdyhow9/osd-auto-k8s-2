@@ -1,7 +1,7 @@
 apiVersion: "sparkoperator.k8s.io/v1beta2"
 kind: SparkApplication
 metadata:
-  name: osds-spark-app
+  name: osds-spark-app-kafka
   namespace: spark-apps
 spec:
   type: Python
@@ -9,12 +9,12 @@ spec:
   mode: cluster
   image: "gvsbharish01/spark3.5-delta-hudi-iceberg:1.0.2-prod"
   imagePullPolicy: Always
-  mainApplicationFile: "gs://osd-scripts/restaurant_files_ingestion_spark.py"
+  mainApplicationFile: "gs://osd-scripts/kafkaIotEventProducer.py"
   sparkVersion: "3.5.0"
   timeToLiveSeconds: 30
   driver:
     cores: 1
-    memory: "4g"
+    memory: "2g"
     labels:
       version: "3.5.0"
     secrets:
@@ -26,8 +26,8 @@ spec:
     serviceAccount: spark
   executor:
     cores: 1
-    memory: "4g"
-    instances: 2
+    memory: "2g"
+    instances: 1
     labels:
       version: "3.5.0"
     secrets:

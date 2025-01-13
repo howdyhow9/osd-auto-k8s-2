@@ -1,0 +1,42 @@
+
+FROM spark:3.5.0-scala2.12-java11-python3-ubuntu
+
+# Run installation tasks as root
+USER root
+
+RUN apt-get update && \
+    apt-get install -y iputils-ping vim curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Specify the official Spark User, working directory, and entry point
+WORKDIR /opt/spark/work-dir
+
+# Preinstall dependencies
+COPY ./spark8s/requirements.txt ${WORKDIR}/requirements.txt
+
+# Install dependencies (conda is too slow)
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r ${WORKDIR}/requirements.txt \
+    && rm -f ${WORKDIR}/requirements.txt
+
+# Environment variables
+
+ARG osdsuser=osdsuser
+ARG GROUP=osdsuser
+ARG WORKDIR=/opt/spark/work-dir
+ENV DELTA_PACKAGE_VERSION=delta-spark_2.12:${DELTA_SPARK_VERSION}
+ENV PATH="/opt/spark/sbin:/opt/spark/bin:${PATH}"
+ENV SPARK_HOME="/opt/spark"
+#ENV SPARK_MASTER="spark://spark-master:7077"
+#ENV SPARK_MASTER_HOST spark-master
+#ENV SPARK_MASTER_PORT 7077
+ENV PYSPARK_PYTHON python3
+
+# OS Installations Configurations
+RUN groupadd -r ${GROUP} && useradd -r -m -g ${GROUP} ${osdsuser}
+RUN apt -qq update
+RUN apt -qq -y install vim curl
+
+#Copy Jars and Files
+COPY --chown=${osdsuser} ./spark8s/source_files/spark_delta/spark_venv/spark_home/jars/* /opt/spark/jars/
+COPY --chown=${osdsuser} ./spark8s/source_files/spark_delta/spark_venv/spark_home/conf/hive-site.xml /opt/spark/conf/hive-site.xml
