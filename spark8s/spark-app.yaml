@@ -14,7 +14,7 @@ spec:
   timeToLiveSeconds: 30
   driver:
     cores: 1
-    memory: "4g"
+    memory: "1g"
     labels:
       version: "3.5.0"
     secrets:
@@ -26,8 +26,8 @@ spec:
     serviceAccount: spark
   executor:
     cores: 1
-    memory: "4g"
-    instances: 2
+    memory: "1g"
+    instances: 1
     labels:
       version: "3.5.0"
     secrets:
